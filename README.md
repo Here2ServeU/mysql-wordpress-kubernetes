@@ -4,7 +4,7 @@ Here's a step-by-step guide to installing Minikube using Docker Compose, creatin
 
 ---
 
-## Step 1. Install Minikube
+## Step 1: Install Minikube
 
 - Go to https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Farm64%2Fstable%2Fbinary+download.
 - Choose your Operating System, and you will see the commands to install the binary on your machine.
@@ -16,23 +16,6 @@ Here's a step-by-step guide to installing Minikube using Docker Compose, creatin
 mkdir mysql-wordpress-kubernetes
 cd mysql-wordpress-kubernetes/
 ```
-- Then, add directories and files to make your project structure look like this:
-```txt
-.
-├── README.md
-├── images
-│   └── minikube-binary-install.png
-├── mysql
-│   ├── mysql-deployment.yaml
-│   ├── mysql-secret.yaml
-│   └── mysql-service.yaml
-├── storage
-│   ├── pv.yaml
-│   └── pvc.yaml
-└── wordpress
-    ├── wordpress-deployment.yaml
-    └── wordpress-service.yaml
-```
 
 - Or, clone the code:
 ```bash
@@ -40,272 +23,279 @@ git clone https://github.com/Here2ServeU/mysql-wordpress-kubernetes/
 cd mysql-wordpress-kubernetes/
 ```
 
-## Step 2. Create a Persistent Volume and Persistent Volume Claim
-
-- Access the Minikube VM to create the /mnt/data/mysql
-```bash
-minikube start  # In case Minikube was stopped. 
-minikube ssh
-sudo mkdir -p /mnt/data/mysql
-sudo chmod 777 /mnt/data/mysql
-ls -ld /mnt/data/mysql #To verify. 
-exit  #: Log out of the Minikube VM and return to the CLI (local machine).
+## Step 2: Create My MySQL Deployment and Service
+**Creating mysql-deployment.yaml**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:8.0
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: MYSQL_DATABASE
+          value: wordpress
+        - name: MYSQL_USER
+          value: wordpress
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
 ```
-- The -p flag ensures that the parent directories are created if they don’t already exist.
-- The chmod 777 command sets full read, write, and execute permissions for all users, which is helpful for testing but can be restricted later.
-
-Persistent Volumes (PV) provide storage for your Kubernetes applications, while Persistent Volume Claims (PVC) allow applications to request specific storage resources dynamically.
-
-**Create a Persistent Volume** (pv.yaml):
+**Creating mysql-service.yaml**
 ```yaml
 apiVersion: v1
-kind: PersistentVolume
+kind: Service
 metadata:
-  name: mysql-pv
+  name: wordpress-mysql
+  labels:
+    app: wordpress
 spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/mnt/data/mysql"
+  ports:
+    - port: 3306
+  selector:
+    app: wordpress
+    tier: mysql
+  clusterIP: None
 ```
 
-**Create a Persistent Volume Claim** (pvc.yaml):
-- Requests 1Gi of storage from the defined Persistent Volume.
+## Step 3: Create MySQL Persistent Volume Claim
+**Creating mysql-pvc.yaml**
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: mysql-pv-claim
+  labels:
+    app: wordpress
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 20Gi
 ```
 
-### Apply the files:
-```bash
-kubectl apply -f storage/pv.yaml
-kubectl apply -f storage/pvc.yaml
-```
-## Step 3. Create a Secret for MySQL Credentials
-
-**Create a Secret for MySQL** (mysql-secret.yaml):
-- Secrets securely store sensitive data, such as MySQL login credentials. 
-- The data is Base64 encoded.
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-type: Opaque
-data:
-  username: bXlzcWw=   # Base64 encoded 'mysql'
-  password: cGFzc3dvcmQ= # Base64 encoded 'password'
-```
-
-**Apply the secret**:
-```bash
-kubectl apply -f mysql/mysql-secret.yaml
-```
-## Step 4. Deploy MySQL Using the Volume Claim and Secrets
-
-This deployment sets up MySQL with the persistent volume for data storage and secrets for secure credential management.
-
-**Create a MySQL Deployment** (mysql-deployment.yaml):
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - name: mysql
-        image: mysql:5.7
-        ports:
-        - containerPort: 3306
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: password
-        volumeMounts:
-        - mountPath: "/var/lib/mysql"
-          name: mysql-storage
-      volumes:
-      - name: mysql-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
-```
-
-**Create a MySQL Service** (mysql-service.yaml):
-- Exposes MySQL within the Kubernetes cluster on port 3306.
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-spec:
-  selector:
-    app: mysql
-  ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306
-  clusterIP: None
-```
-
-**Apply the files**:
-```bash
-kubectl apply -f mysql/mysql-deployment.yaml
-kubectl apply -f mysql/mysql-service.yaml
-```
-
-## Step 5. Deploy WordPress
-
-- WordPress connects to MySQL using the credentials stored in the secret.
-
-**Create a WordPress Deployment** (wordpress-deployment.yaml):
+## Step 4: Create WordPress Deployment and Service
+**Creating wordpress-deployment.yaml**
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wordpress
+  labels:
+    app: wordpress
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: wordpress
+      tier: frontend
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         app: wordpress
+        tier: frontend
     spec:
       containers:
-      - name: wordpress
-        image: wordpress:php8.0-apache
-        ports:
-        - containerPort: 80
+      - image: wordpress:6.2.1-apache
+        name: wordpress
         env:
         - name: WORDPRESS_DB_HOST
-          value: mysql
-        - name: WORDPRESS_DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: mysql-secret
-              key: username
+          value: wordpress-mysql
         - name: WORDPRESS_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-secret
+              name: mysql-pass
               key: password
+        - name: WORDPRESS_DB_USER
+          value: wordpress
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpress-persistent-storage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pv-claim
 ```
 
-**Create a WordPress Service** (wordpress-service.yaml):
-- Exposes WordPress externally using a NodePort.
-
+**Creating wordpress-service.yaml**
 ```yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: wordpress
+  labels:
+    app: wordpress
 spec:
+  ports:
+    - port: 80
   selector:
     app: wordpress
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  type: NodePort
-```
-**Apply the files**:
-```bash
-kubectl apply -f wordpress/wordpress-deployment.yaml
-kubectl apply -f wordpress/wordpress-service.yaml
-```
-## Step 6. Test the WordPress Application
-**Get the NodePort for WordPress:**
-```bash
-kubectl get svc wordpress
+    tier: frontend
+  type: LoadBalancer
 ```
 
-**Open the application in your browser**: 
-```text
-http://<minikube_ip>:<node_port>.
+## Step 5: Create WordPress Volume Claim
+**Creating wordpress-pvc.yaml**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wp-pv-claim
+  labels:
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
 ```
-**You can get the Minikube IP using**:
+
+## Step 6: Create Secrets for MySQL Password
+
+**Creating mysql-secret.yaml**
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-pass
+type: Opaque
+data:
+  password: cGFzc3dvcmQ=  # Base64 encoded value of 'password'
+```
+
+## Step 7: Apply the Configuration
+
+**Apply the Secrets**
+```bash
+kubectl apply -f mysql-secret.yaml
+```
+
+**Create Persistent Volume Claims**
+```bash
+kubectl apply -f mysql-pvc.yaml
+kubectl apply -f wordpress-pvc.yaml
+```
+
+**Deploy MySQL**
+```bash
+kubectl apply -f mysql-deployment.yaml
+kubectl apply -f mysql-service.yaml
+```
+
+**Deploy WordPress**
+```bash
+kubectl apply -f wordpress-deployment.yaml
+kubectl apply -f wordpress-service.yaml
+```
+
+## Step 8: Test and Verify
+
+**Check the Status of Pods and Services**
+```bash
+kubectl get pods
+kubectl get svc
+```
+
+**Access WordPress**
+- If using Minikube, get the Minikube IP: 
 ```bash
 minikube ip
 ```
 
+- Combine the Minikube IP with the NodePort or LoadBalancer IP:
+```text
+http://<minikube_ip>:<loadbalancer_port>
+```
+
 ---
 
-## Cleanup Steps
-To clean up all resources and stop Minikube:
+## Clean Up
 
-**Delete all Kubernetes resources**:
+**Delete WordPress Deployment and Service:**
 ```bash
-#To delete Storage resources
-kubectl delete -f storage/pv.yaml       
-kubectl delete -f storage/pvc.yaml
-
-#To delete MySQL resources
-kubectl delete -f mysql/mysql-secret.yaml  
-kubectl delete -f mysql/mysql-deployment.yaml
-kubectl delete -f mysql/mysql-service.yaml
-
-#To delete WordPress resources
-kubectl delete -f wordpress/wordpress-deployment.yaml  
-kubectl delete -f wordpress/wordpress-service.yaml
+kubectl delete -f wordpress-deployment.yaml
+kubectl delete -f wordpress-service.yaml
 ```
 
-**To Stop and remove Minikube as desired**:
+**Delete MySQL Deployment and Service:**
 ```bash
-minikuke stop 
-minikube delete 
+kubectl delete -f mysql-deployment.yaml
+kubectl delete -f mysql-service.yaml
 ```
 
-**To remove local Data Directories**
+**Delete Persistent Volume Claims for WordPress and MySQL**
 ```bash
-# To remove MySQL Data directory
-rm -rf /mnt/data/mysql
+kubectl delete -f wordpress-pvc.yaml
+kubectl delete -f mysql-pvc.yaml
+```
 
-# To remove Minikube Data directory
+**Delete MySQL Secret:**
+```bash
+kubectl delete -f mysql-secret.yaml
+```
+
+**Verify Cleanup**
+```bash
+kubectl get pods
+kubectl get svc
+kubectl get pvc
+kubectl get pv
+kubectl get secrets
+```
+
+**Cleanup Local Directories (Optional)**
+```bash
+sudo rm -rf /mnt/data/mysql
+sudo rm -rf /mnt/data/wordpress
+rm -rf /path/to/your/project/directory
+```
+
+**Stop and Delete Minikube (If Applicable) and Remove Minikube and Kubernetes configuration files**
+```bash
+minikube stop
+minikube delete
 rm -rf ~/.minikube
 rm -rf ~/.kube
-
-# To remove Project directory
-rm -rf mysql-wordpress-kubernetes
-
-# To verify
-kubectl get all
-kubectl get pvc,pv
 ```
-
 
 ---
 
-This setup provides a fully functional WordPress application backed by MySQL with persistent storage and secret management.
