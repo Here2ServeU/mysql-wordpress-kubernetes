@@ -4,39 +4,11 @@ Here's a step-by-step guide to installing Minikube using Docker Compose, creatin
 
 ---
 
-## Step 1. Install Minikube with Docker Compose
+## Step 1. Install Minikube
 
-Minikube is a lightweight Kubernetes implementation, and running it with Docker Compose allows you to test Kubernetes locally without additional virtualization tools.
+- Go to https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Farm64%2Fstable%2Fbinary+download.
+- Choose 
 
-**Docker Compose File**:
-
-- This file defines a service to run Minikube as a container using the kicbase image, exposing necessary ports for Kubernetes.
-
-### Create a Docker Compose file (docker-compose.yml):
-```yaml
-version: '3.8'
-services:
-  minikube:
-    image: gcr.io/k8s-minikube/kicbase:v0.0.30
-    container_name: minikube
-    privileged: true
-    ports:
-      - "127.0.0.1:8443:8443" # API server port
-      - "127.0.0.1:30000-32767:30000-32767" # NodePort range
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/minikube:/var/lib/minikube
-```
-### Run Docker Compose:
-```bash
-docker-compose up -d
-```
-
-### Connect Minikube to Kubernetes CLI:
-```bash
-kubectl config set-cluster minikube --server=https://127.0.0.1:8443 --insecure-skip-tls-verify=true
-kubectl config set-context minikube --cluster=minikube
-kubectl config use-context minikube
 ```
 
 ## Step 2. Create a Persistent Volume and Persistent Volume Claim
