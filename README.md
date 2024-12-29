@@ -253,9 +253,22 @@ To clean up all resources and stop Minikube:
 kubectl delete svc,deploy,pvc,pv,secret --all
 ```
 
-**Stop and remove Minikube**:
+**Stop and remove Minikube as desired**:
 ```bash
-docker-compose down
+minikuke stop  #To stop Minikube
+minikube delete # To delete Minikube
+```
+**To clean up Minikube files**
+```bash
+rm -rf ~/.minikube
+rm -rf ~/.kube
+```
+
+**To remove minikube and its binary**
+```bash
+sudo rm -f /usr/local/bin/minikube
+brew uninstall minikube  # For MacOS. 
+minikube version   # To verify removal.
 ```
 
 **Remove data directories**:
