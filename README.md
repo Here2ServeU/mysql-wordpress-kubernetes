@@ -20,8 +20,6 @@ cd mysql-wordpress-kubernetes/
 ```txt
 .
 ├── README.md
-├── data
-│   └── mysql
 ├── images
 │   └── minikube-binary-install.png
 ├── mysql
@@ -38,6 +36,15 @@ cd mysql-wordpress-kubernetes/
 
 ## Step 2. Create a Persistent Volume and Persistent Volume Claim
 
+- Access the Minikube VM to create the /mnt/data/mysql
+```bash
+minikube ssh
+sudo mkdir -p /mnt/data/mysql
+sudo chmod 777 /mnt/data/mysql
+```
+- The -p flag ensures that the parent directories are created if they don’t already exist.
+- The chmod 777 command sets full read, write, and execute permissions for all users, which is helpful for testing but can be restricted later.
+
 Persistent Volumes (PV) provide storage for your Kubernetes applications, while Persistent Volume Claims (PVC) allow applications to request specific storage resources dynamically.
 
 **Create a Persistent Volume** (pv.yaml):
@@ -52,7 +59,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/data/mysql"
+    path: "/mnt/data/mysql"
 ```
 
 **Create a Persistent Volume Claim** (pvc.yaml):
@@ -72,8 +79,8 @@ spec:
 
 ### Apply the files:
 ```bash
-kubectl apply -f /storage/pv.yaml
-kubectl apply -f /storage/pvc.yaml
+kubectl apply -f storage/pv.yaml
+kubectl apply -f storage/pvc.yaml
 ```
 ## Step 3. Create a Secret for MySQL Credentials
 
@@ -87,8 +94,8 @@ metadata:
   name: mysql-secret
 type: Opaque
 data:
-  username: bXlzcWw=   # Base64 encoded value of 'mysql'
-  password: cGFzc3dvcmQ= # Base64 encoded value of 'password'
+  username: bXlzcWw=   # Base64 encoded 'mysql'
+  password: cGFzc3dvcmQ= # Base64 encoded 'password'
 ```
 
 **Apply the secret**:
@@ -118,6 +125,8 @@ spec:
       containers:
       - name: mysql
         image: mysql:5.7
+        ports:
+        - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
@@ -188,7 +197,9 @@ spec:
     spec:
       containers:
       - name: wordpress
-        image: wordpress:latest
+        image: wordpress:php8.0-apache
+        ports:
+        - containerPort: 80
         env:
         - name: WORDPRESS_DB_HOST
           value: mysql
@@ -202,8 +213,6 @@ spec:
             secretKeyRef:
               name: mysql-secret
               key: password
-        ports:
-        - containerPort: 80
 ```
 
 **Create a WordPress Service** (wordpress-service.yaml):
