@@ -23,6 +23,23 @@ git clone https://github.com/Here2ServeU/mysql-wordpress-kubernetes/
 cd mysql-wordpress-kubernetes/
 ```
 
+- You should have a directory structure like this:
+```text
+.
+├── README.md
+├── images
+│   └── minikube-binary-install.png
+├── mysql
+│   ├── mysql-deployment.yaml
+│   ├── mysql-pvc.yaml
+│   ├── mysql-secret.yaml
+│   └── mysql-service.yaml
+└── wordpress
+    ├── wordpress-deployment.yaml
+    ├── wordpress-pvc.yaml
+    └── wordpress-service.yaml
+```
+
 ## Step 2: Create My MySQL Deployment and Service
 **Creating mysql-deployment.yaml**
 ```yaml
