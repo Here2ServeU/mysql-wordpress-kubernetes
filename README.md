@@ -72,8 +72,8 @@ spec:
 
 ### Apply the files:
 ```bash
-kubectl /storage/apply -f pv.yaml
-kubectl /storage/apply -f pvc.yaml
+kubectl apply -f /storage/pv.yaml
+kubectl apply -f /storage/pvc.yaml
 ```
 ## Step 3. Create a Secret for MySQL Credentials
 
