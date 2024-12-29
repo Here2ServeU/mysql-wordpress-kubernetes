@@ -9,7 +9,7 @@ Here's a step-by-step guide to installing Minikube using Docker Compose, creatin
 - Go to https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Farm64%2Fstable%2Fbinary+download.
 - Choose your Operating System as shown on the picture below and follow the prompts.
 
-![Minikube Binary Install](images/images/minikube-binary-install.png)
+![Minikube Binary Install](images/minikube-binary-install.png)
 
 ## Step 2. Create a Persistent Volume and Persistent Volume Claim
 
