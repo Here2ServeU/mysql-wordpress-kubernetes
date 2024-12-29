@@ -11,15 +11,34 @@ Here's a step-by-step guide to installing Minikube using Docker Compose, creatin
 
 ![Minikube Binary Install](images/minikube-binary-install.png)
 
+- Create your project directory:
+```bash
+mkdir mysql-wordpress-kubernetes
+cd mysql-wordpress-kubernetes/
+```
+- Then, add directories and files to make your project structure look like this:
+```txt
+.
+├── README.md
+├── data
+│   └── mysql
+├── images
+│   └── minikube-binary-install.png
+├── mysql
+│   ├── mysql-deployment.yaml
+│   ├── mysql-secret.yaml
+│   └── mysql-service.yaml
+├── storage
+│   ├── pv.yaml
+│   └── pvc.yaml
+└── wordpress
+    ├── wordpress-deployment.yaml
+    └── wordpress-service.yaml
+```
+
 ## Step 2. Create a Persistent Volume and Persistent Volume Claim
 
 Persistent Volumes (PV) provide storage for your Kubernetes applications, while Persistent Volume Claims (PVC) allow applications to request specific storage resources dynamically.
-
-**Persistent Volume**:
-- Defines a directory on the host system (/data/mysql) for MySQL data.
-```bash
-mkdir -p /data/mysql
-```
 
 **Create a Persistent Volume** (pv.yaml):
 ```yaml
@@ -53,8 +72,8 @@ spec:
 
 ### Apply the files:
 ```bash
-kubectl apply -f pv.yaml
-kubectl apply -f pvc.yaml
+kubectl /storage/apply -f pv.yaml
+kubectl /storage/apply -f pvc.yaml
 ```
 ## Step 3. Create a Secret for MySQL Credentials
 
@@ -74,7 +93,7 @@ data:
 
 **Apply the secret**:
 ```bash
-kubectl apply -f mysql-secret.yaml
+kubectl apply -f mysql/mysql-secret.yaml
 ```
 ## Step 4. Deploy MySQL Using the Volume Claim and Secrets
 
@@ -143,8 +162,8 @@ spec:
 
 **Apply the files**:
 ```bash
-kubectl apply -f mysql-deployment.yaml
-kubectl apply -f mysql-service.yaml
+kubectl apply -f mysql/mysql-deployment.yaml
+kubectl apply -f mysql/mysql-service.yaml
 ```
 
 ## Step 5. Deploy WordPress
@@ -206,8 +225,8 @@ spec:
 ```
 **Apply the files**:
 ```bash
-kubectl apply -f wordpress-deployment.yaml
-kubectl apply -f wordpress-service.yaml
+kubectl apply -f wordpress/wordpress-deployment.yaml
+kubectl apply -f wordpress/wordpress-service.yaml
 ```
 ## Step 6. Test the WordPress Application
 **Get the NodePort for WordPress:**
@@ -243,6 +262,11 @@ docker-compose down
 ```bash
 rm -rf /data/mysql
 rm -rf /var/lib/minikube
+```
+
+**Remove the project directory**:
+```bash
+rm -rf /mysql-wordpress-kubernetes
 ```
 
 ---
