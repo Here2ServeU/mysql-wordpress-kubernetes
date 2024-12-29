@@ -38,11 +38,13 @@ cd mysql-wordpress-kubernetes/
 ```bash
 git clone https://github.com/Here2ServeU/mysql-wordpress-kubernetes/
 cd mysql-wordpress-kubernetes/
+```
 
 ## Step 2. Create a Persistent Volume and Persistent Volume Claim
 
 - Access the Minikube VM to create the /mnt/data/mysql
 ```bash
+minikube start  # In case Minikube was stopped. 
 minikube ssh
 sudo mkdir -p /mnt/data/mysql
 sudo chmod 777 /mnt/data/mysql
