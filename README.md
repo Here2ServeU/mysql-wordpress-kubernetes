@@ -267,25 +267,25 @@ minikube service wordpress --url
 
 **Delete WordPress Deployment and Service:**
 ```bash
-kubectl delete -f wordpress-deployment.yaml
-kubectl delete -f wordpress-service.yaml
+kubectl delete -f wordpress/wordpress-deployment.yaml
+kubectl delete -f wordpress/wordpress-service.yaml
 ```
 
 **Delete MySQL Deployment and Service:**
 ```bash
-kubectl delete -f mysql-deployment.yaml
-kubectl delete -f mysql-service.yaml
+kubectl delete -f mysql/mysql-deployment.yaml
+kubectl delete -f mysql/mysql-service.yaml
 ```
 
 **Delete Persistent Volume Claims for WordPress and MySQL**
 ```bash
-kubectl delete -f wordpress-pvc.yaml
-kubectl delete -f mysql-pvc.yaml
+kubectl delete -f wordpress/wordpress-pvc.yaml
+kubectl delete -f mysql/mysql-pvc.yaml
 ```
 
 **Delete MySQL Secret:**
 ```bash
-kubectl delete -f mysql-secret.yaml
+kubectl delete -f mysql/mysql-secret.yaml
 ```
 
 **Verify Cleanup**
