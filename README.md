@@ -255,13 +255,11 @@ kubectl get svc
 **Access WordPress**
 - If using Minikube, get the Minikube IP: 
 ```bash
-minikube ip
+minikube service wordpress --url
 ```
 
-- Combine the Minikube IP with the NodePort or LoadBalancer IP:
-```text
-http://<minikube_ip>:<loadbalancer_port>
-```
+- This command will return a URL (e.g., http://<minikube_ip>:<node_port>).
+- You can use this URL to access WordPress in your browser.
 
 ---
 
