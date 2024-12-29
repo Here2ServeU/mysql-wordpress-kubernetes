@@ -261,37 +261,43 @@ To clean up all resources and stop Minikube:
 
 **Delete all Kubernetes resources**:
 ```bash
-kubectl delete svc,deploy,pvc,pv,secret --all
+#To delete Storage resources
+kubectl delete -f storage/pv.yaml       
+kubectl delete -f storage/pvc.yaml
+
+#To delete MySQL resources
+kubectl delete -f mysql/mysql-secret.yaml  
+kubectl delete -f mysql/mysql-deployment.yaml
+kubectl delete -f mysql/mysql-service.yaml
+
+#To delete WordPress resources
+kubectl delete -f wordpress/wordpress-deployment.yaml  
+kubectl delete -f wordpress/wordpress-service.yaml
 ```
 
-**Stop and remove Minikube as desired**:
+**To Stop and remove Minikube as desired**:
 ```bash
-minikuke stop  #To stop Minikube
-minikube delete # To delete Minikube
+minikuke stop 
+minikube delete 
 ```
-**To clean up Minikube files**
+
+**To remove local Data Directories**
 ```bash
+# To remove MySQL Data directory
+rm -rf /mnt/data/mysql
+
+# To remove Minikube Data directory
 rm -rf ~/.minikube
 rm -rf ~/.kube
+
+# To remove Project directory
+rm -rf mysql-wordpress-kubernetes
+
+# To verify
+kubectl get all
+kubectl get pvc,pv
 ```
 
-**To remove minikube and its binary**
-```bash
-sudo rm -f /usr/local/bin/minikube
-brew uninstall minikube  # For MacOS. 
-minikube version   # To verify removal.
-```
-
-**Remove data directories**:
-```bash
-rm -rf /data/mysql
-rm -rf /var/lib/minikube
-```
-
-**Remove the project directory**:
-```bash
-rm -rf /mysql-wordpress-kubernetes
-```
 
 ---
 
