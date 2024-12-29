@@ -41,6 +41,8 @@ cd mysql-wordpress-kubernetes/
 minikube ssh
 sudo mkdir -p /mnt/data/mysql
 sudo chmod 777 /mnt/data/mysql
+ls -ld /mnt/data/mysql #To verify. 
+exit  #: Log out of the Minikube VM and return to the CLI (local machine).
 ```
 - The -p flag ensures that the parent directories are created if they don’t already exist.
 - The chmod 777 command sets full read, write, and execute permissions for all users, which is helpful for testing but can be restricted later.
