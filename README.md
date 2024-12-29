@@ -206,25 +206,25 @@ data:
 
 **Apply the Secrets**
 ```bash
-kubectl apply -f mysql-secret.yaml
+kubectl apply -f mysql/mysql-secret.yaml
 ```
 
 **Create Persistent Volume Claims**
 ```bash
-kubectl apply -f mysql-pvc.yaml
-kubectl apply -f wordpress-pvc.yaml
+kubectl apply -f mysql/mysql-pvc.yaml
+kubectl apply -f wordpress/wordpress-pvc.yaml
 ```
 
 **Deploy MySQL**
 ```bash
-kubectl apply -f mysql-deployment.yaml
-kubectl apply -f mysql-service.yaml
+kubectl apply -f mysql/mysql-deployment.yaml
+kubectl apply -f mysql/mysql-service.yaml
 ```
 
 **Deploy WordPress**
 ```bash
-kubectl apply -f wordpress-deployment.yaml
-kubectl apply -f wordpress-service.yaml
+kubectl apply -f wordpress/wordpress-deployment.yaml
+kubectl apply -f wordpress/wordpress-service.yaml
 ```
 
 ## Step 8: Test and Verify
